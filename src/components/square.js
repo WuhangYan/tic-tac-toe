@@ -10,7 +10,7 @@ export default class Square extends React.Component {
     render() {
         return (
             <div 
-                className="square" 
+                className={this.props.isBold ? 'current-move square' : 'square'} 
                 onClick={() => { this.props.onMove() }}
             >
                 {this.props.value}

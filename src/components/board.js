@@ -7,43 +7,35 @@ export default class Board extends React.Component {
             <Square
                 value={this.props.squares[i]}
                 onMove={() => this.props.onMove(i)}
+                isBold={this.props.winnerLine ? this.props.winnerLine.indexOf(i) > -1
+                     : this.props.currentMove === i}
+                key={i}
             />
         )
     }
 
     render() {
+        let boards = [];
+        for (let i = 0; i < 3; i++) {
+            const squares = [];
+            for (let j = 0; j < 3; j++) {
+                squares.push(
+                    this.renderSquare(i * 3 + j)
+                )
+            }
+            boards.push(
+                <div 
+                    className="row"
+                    key={i}
+                >
+                    {squares}
+                </div>
+            )
+        }
         return (
             <div>
-                <div className="row">
-                    {this.renderSquare(0)}{this.renderSquare(1)}{this.renderSquare(2)}
-                </div>
-                <div className="row">
-                    {this.renderSquare(3)}{this.renderSquare(4)}{this.renderSquare(5)}
-                </div>
-                <div className="row">
-                    {this.renderSquare(6)}{this.renderSquare(7)}{this.renderSquare(8)}
-                </div>
+                {boards}
             </div>
         )
     }
-}
-
-function winnerCheck(squares) {
-    const lines = [
-        [0, 1, 2],
-        [3, 4, 5],
-        [6, 7, 8],
-        [0, 3, 6],
-        [0, 4, 8],
-        [1, 4, 7],
-        [2, 5, 8],
-        [2, 4, 6]
-    ]
-    for (let line of lines) {
-        const [a, b, c] = line;
-        if (squares[a] && squares[a] === squares[b] && squares[c] === squares[b] && squares[a] === squares[c]) {
-            return squares[a];
-        }
-    }
-    return null;
 }

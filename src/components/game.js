@@ -1,115 +1,93 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Board from './board';
+import { winnerCheck } from '../utils/game';
 
-export default class Game extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            history: [
-                { squares: Array(9).fill(null), coordinate: null }
-            ],
-            xIsNext: true,
-            winner: null,
-            winnerLine: null,
-            isDescending: false
-        }
+
+function Game() {
+    const [history, setHistory] = useState([{ squares: Array(9).fill(null), coordinate: null }]);
+    const [isCurrentUser, setIsCurrentUser] = useState(true);
+    const [winner, setWinner] = useState(null);
+    const [winnerLine, setWinnerLine] = useState(null);
+
+    const initialNewGame = () => {
+        setHistory(h => h.push({ squares: Array(9).fill(null), coordinate: null }));
     }
 
-    handleMove(i) {
-        const history = this.state.history;
+    const handleMove = (i) => {
         const squares = history[history.length - 1].squares.slice();
         let coordinate = {};
-        if (squares[i] !== null || this.state.winner) {
+        if (squares[i] !== null || winner) {
             return;
         }
-        squares[i] = this.state.xIsNext ? 'X' : 'O';
+        squares[i] = isCurrentUser ? 'X' : 'O';
         coordinate = i;
-        this.setState({
-            history: history.concat([{ squares, coordinate }]),
-            xIsNext: !this.state.xIsNext
-        })
-        const winnerConfig = winnerCheck(squares);
-        if (winnerConfig) {
-            this.setState({
-                winner: winnerConfig[0],
-                winnerLine: winnerConfig[1]
-            })
+        setHistory(h => h.concat({ squares, coordinate }));
+        setIsCurrentUser(!isCurrentUser);
+        const winnerInfo = winnerCheck(squares);
+        if (winnerInfo) {
+            setWinner(winnerInfo.winner);
+            setWinnerLine(winnerInfo.winnerLine);
         }
     }
 
-    jumpTo(i) {
-        const winner = i === this.state.history.length - 1 ? this.state.winner : null;
-        this.setState({
-            xIsNext: i % 2 === 0,
-            history: this.state.history.slice(0, i + 1),
-            winner,
-            winnerLine: winner ? this.state.winnerLine : null
-        })
+    const jumpTo = (i) => {
+        const winner = i === history.length - 1 ? winner : null;
+        setIsCurrentUser(i % 2 === 0);
+        setHistory(h => h.slice(0, i + 1));
+        setWinner(winner);
+        setWinnerLine(winner ? winnerLine : null);
     }
-
-    handleOnToggle(e) {
-        this.setState({
-            isDescending: e.target.checked
-        })
-    }
-
-    render() {
-        const drawNote = 'DRAW, please tap on \'Go to game start\'';
-        let moves = this.state.history.map((step, move) => {
-            const desc = move ? `Go to move #${move} (${Math.floor(step.coordinate/3)}, ${step.coordinate%3})` : 'Go to game start';
-            return (
-                <li key={move}>
-                    <button onClick={() => { this.jumpTo(move) }}>{desc}</button>
-                </li>
-            )
-        })
-        if (this.state.isDescending) {
-            moves = moves.reverse();
-        }
-        return (
-            <div className="game">
-                <div className="game-board">
-                    <Board
-                        squares={this.state.history[this.state.history.length - 1].squares}
-                        onMove={(i) => { this.handleMove(i) }}
-                        currentMove={this.state.history[this.state.history.length - 1].coordinate}
-                        winnerLine={this.state.winnerLine}
-                    />
-                </div>
-                <div className="game-info">
-                    <div>
-                        {this.state.winner ? `Winner is: ${this.state.winner}` :
-                            `Next player: ${this.state.xIsNext ? 'X' : 'O'}`}
-                    </div>
-                    <input type="checkbox" onChange={(e) => {this.handleOnToggle(e)}} id="switch" className="checkbox hide"/>
-                    <label for="switch" className="toggle">
-                    </label>
-                    {
-                        this.state.isDescending ? <ol reversed>{moves}</ol> : <ol>{moves}</ol>
-                    }
-                    <div className={this.state.history.length === 10 && this.state.winner === null ? '' : 'hide'}>{drawNote}</div>
-                </div>
+    return (
+        <div className="game">
+            <div className="game-board">
+                <Board
+                    squares={history[history.length - 1].squares}
+                    onMove={(i) => { handleMove(i) }}
+                    currentMove={history[history.length - 1].coordinate}
+                    winnerLine={winnerLine}
+                />
             </div>
-        )
-    }
+            <div className="game-info">
+                <div>
+                    {winner ? `Winner is: ${winner}` :
+                        `Next player: ${isCurrentUser ? 'X' : 'O'}`}
+                </div>
+                <Move history={history} jumpTo={jumpTo} />
+                <div className={history.length === 10 && winner === null ? '' : 'hide'}>{'DRAW, please tap on \'Go to game start\''}</div>
+            </div>
+        </div>
+    )
+
 }
 
-function winnerCheck(squares) {
-    const lines = [
-        [0, 1, 2],
-        [3, 4, 5],
-        [6, 7, 8],
-        [0, 3, 6],
-        [0, 4, 8],
-        [1, 4, 7],
-        [2, 5, 8],
-        [2, 4, 6]
-    ]
-    for (let line of lines) {
-        const [a, b, c] = line;
-        if (squares[a] && squares[a] === squares[b] && squares[c] === squares[b] && squares[a] === squares[c]) {
-            return [squares[a], line];
-        }
+function Move({history, jumpTo}) {
+    const [isDescending, setIsDescending] = useState(false);
+    const moves = history.map((step, move) => {
+        const desc = move ? `Go to move #${move} (${Math.floor(step.coordinate / 3)}, ${step.coordinate % 3})` : 'Go to game start';
+        return (
+            <li key={move}>
+                <button onClick={() => { jumpTo(move) }}>{desc}</button>
+            </li>
+        )
+    })
+    if (isDescending) {
+        moves = moves.reverse();
     }
-    return null;
+
+    const handleToggleReverse = () => {
+        setIsDescending(!isDescending);
+    }
+
+    return (
+        <>
+            <input type="checkbox" onChange={handleToggleReverse} id="switch" className="checkbox hide" />
+            <label for="switch" className="toggle">
+            </label>
+            {
+                isDescending ? <ol reversed>{moves}</ol> : <ol>{moves}</ol>
+            }
+        </>
+    )
 }
+
+export default Game;

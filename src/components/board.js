@@ -1,41 +1,51 @@
 import React from 'react';
 import Square from './square';
+import Move from './move';
+import useGame from '../hooks/useGame';
 
-export default class Board extends React.Component {
-    renderSquare(i) {
-        return (
-            <Square
-                value={this.props.squares[i]}
-                onMove={() => this.props.onMove(i)}
-                isBold={this.props.winnerLine ? this.props.winnerLine.indexOf(i) > -1
-                     : this.props.currentMove === i}
-                key={i}
-            />
-        )
-    }
+function Board() {
+    const { last, history, currentMove, winner, winnerLine, handleMove, jumpTo } = useGame();
 
-    render() {
-        let boards = [];
-        for (let i = 0; i < 3; i++) {
-            const squares = [];
-            for (let j = 0; j < 3; j++) {
-                squares.push(
-                    this.renderSquare(i * 3 + j)
-                )
-            }
-            boards.push(
-                <div 
-                    className="row"
-                    key={i}
-                >
-                    {squares}
-                </div>
+    const lastSquares = last.squares;
+    const lastMove = last.coordinate;
+
+    const boards = [0, 1, 2].map(i => {
+        const squareLine = [0, 1, 2].map(j => {
+            const idx = i * 3 + j;
+            return (
+                <Square
+                    value={lastSquares[idx]}
+                    onMove={() => handleMove(idx)}
+                    isBold={winnerLine ? winnerLine.indexOf(idx) > -1
+                        : lastMove === idx}
+                    key={idx}
+                />
             )
-        }
+        })
         return (
-            <div>
-                {boards}
+            <div
+                className="row"
+                key={i}
+            >
+                {squareLine}
             </div>
         )
-    }
+    })
+
+    return (
+        <div className="game">
+            <div className="game-board">
+                {boards}
+            </div>
+            <div className="game-info">
+                <div>
+                    {winner ? `Winner is: ${winner}` :
+                        `Next player: ${currentMove}`}
+                </div>
+                <Move history={history} jumpTo={jumpTo} />
+                <div className={history.length === 10 && winner === null ? '' : 'hide'}>{'DRAW, please tap on \'Go to game start\''}</div>
+            </div>
+        </div>
+    )
 }
+export default Board;

@@ -1,39 +1,50 @@
 import React from 'react';
 import Square from './square';
+import Move from './move';
+import useGame from '../hooks/useGame';
 
-function Board(props) {
+function Board() {
+    const { last, history, currentMove, winner, winnerLine, handleMove, jumpTo } = useGame();
 
-    const renderSquares = (i) => {
-        return (
-            <Square
-                value={props.squares[i]}
-                onMove={() => props.onMove(i)}
-                isBold={props.winnerLine ? props.winnerLine.indexOf(i) > -1
-                    : props.currentMove === i}
-                key={i}
-            />
-        )
-    }
-    const boards = [];
-    for (let i = 0; i < 3; i++) {
-        const squares = [];
-        for (let j = 0; j < 3; j++) {
-            squares.push(
-                renderSquares(i * 3 + j)
+    const lastSquares = last.squares;
+    const lastMove = last.coordinate;
+
+    const boards = [0, 1, 2].map(i => {
+        const squareLine = [0, 1, 2].map(j => {
+            const idx = i * 3 + j;
+            return (
+                <Square
+                    value={lastSquares[idx]}
+                    onMove={() => handleMove(idx)}
+                    isBold={winnerLine ? winnerLine.indexOf(idx) > -1
+                        : lastMove === idx}
+                    key={idx}
+                />
             )
-        }
-        boards.push(
+        })
+        return (
             <div
                 className="row"
                 key={i}
             >
-                {squares}
+                {squareLine}
             </div>
         )
-    }
+    })
+
     return (
-        <div>
-            {boards}
+        <div className="game">
+            <div className="game-board">
+                {boards}
+            </div>
+            <div className="game-info">
+                <div>
+                    {winner ? `Winner is: ${winner}` :
+                        `Next player: ${currentMove}`}
+                </div>
+                <Move history={history} jumpTo={jumpTo} />
+                <div className={history.length === 10 && winner === null ? '' : 'hide'}>{'DRAW, please tap on \'Go to game start\''}</div>
+            </div>
         </div>
     )
 }

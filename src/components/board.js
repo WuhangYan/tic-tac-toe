@@ -2,12 +2,13 @@ import React from 'react';
 import Square from './square';
 import Move from './move';
 import useGame from '../hooks/useGame';
+import { isDraw } from '../utils/game';
 
 function Board() {
-    const { last, history, currentMove, winner, winnerLine, handleMove, jumpTo } = useGame();
+    const { last, history, currentPlayer, winner, winnerLine, handleMove, jumpTo } = useGame();
 
     const lastSquares = last.squares;
-    const lastMove = last.coordinate;
+    const lastMove = last.move;
 
     const boards = [0, 1, 2].map(i => {
         const squareLine = [0, 1, 2].map(j => {
@@ -40,10 +41,10 @@ function Board() {
             <div className="game-info">
                 <div>
                     {winner ? `Winner is: ${winner}` :
-                        `Next player: ${currentMove}`}
+                        `Next player: ${currentPlayer}`}
                 </div>
                 <Move history={history} jumpTo={jumpTo} />
-                <div className={history.length === 10 && winner === null ? '' : 'hide'}>{'DRAW, please tap on \'Go to game start\''}</div>
+                <div className={isDraw(history) ? '' : 'hide'}>{'DRAW, please tap on \'Go to game start\''}</div>
             </div>
         </div>
     )
